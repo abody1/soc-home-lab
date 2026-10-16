@@ -1,0 +1,24 @@
+<!--
+  PROPOSED rule – a fix for the "severity paradox" described in docs/findings.md.
+
+  Problem: a UNION-based SQL injection that SUCCEEDS (HTTP 200) only triggers
+  rule 31106 at level 6, while failed attempts (HTTP 500) trigger 31103 at level 7.
+
+  Idea: when 31106 fires and the request contains a UNION SELECT pattern,
+  raise a new high-severity alert so it is triaged first.
+
+  Status: written as an improvement proposal. Test with /var/ossec/bin/wazuh-logtest
+  against real log lines before deploying.
+-->
+<group name="local,web,attack,sql_injection,">
+
+  <rule id="100110" level="12">
+    <if_sid>31106</if_sid>
+    <regex type="pcre2">(?i)union(\+|%20|\s)+(all(\+|%20|\s)+)?select</regex>
+    <description>Possible SUCCESSFUL SQL injection: UNION SELECT request returned HTTP 200</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+  </rule>
+
+</group>

@@ -1,0 +1,4 @@
+lab/nginx-logs/
+*.env
+.env
+__pycache__/

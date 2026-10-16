@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-10-13T22:09:33.000+0000",
+  "rule": {
+    "id": "31106",
+    "level": 6,
+    "description": "A web attack returned code 200 (success).",
+    "groups": ["web", "accesslog", "attack"]
+  },
+  "agent": { "name": "nginx-proxy" },
+  "data": {
+    "srcip": "203.0.113.50",
+    "url": "/rest/products/search?q=qwert%27%29%29+UNION+SELECT+name%2ctype%2c%273%27%2c%274%27%2c%275%27%2c%276%27%2c%277%27%2c%278%27%2c%279%27+FROM+sqlite_master--",
+    "id": "200",
+    "protocol": "GET"
+  },
+  "decoder": { "name": "web-accesslog" },
+  "_note": "Reduced example alert for offline testing. Field values taken from a real lab alert; source IP replaced with a documentation address."
+}

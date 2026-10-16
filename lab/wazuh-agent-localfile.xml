@@ -1,0 +1,11 @@
+<!--
+  Added to the Wazuh agent's ossec.conf on the proxy host (agent name: nginx-proxy).
+  Tells the agent to read the Nginx access log so the built-in web rules
+  (e.g. 31103 SQL injection attempt, 31106 web attack returned code 200) can fire.
+-->
+<ossec_config>
+  <localfile>
+    <log_format>apache</log_format>
+    <location>/path/to/lab/nginx-logs/access.log</location>
+  </localfile>
+</ossec_config>

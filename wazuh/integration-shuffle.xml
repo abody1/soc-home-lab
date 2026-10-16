@@ -1,0 +1,13 @@
+<!--
+  Added to the Wazuh manager's ossec.conf.
+  Sends every alert of level 6 or higher to a Shuffle webhook as JSON.
+  Replace the hook_url with the webhook URL from your own Shuffle workflow.
+-->
+<ossec_config>
+  <integration>
+    <name>shuffle</name>
+    <hook_url>https://SHUFFLE_HOST/api/v1/hooks/webhook_XXXXXXXX</hook_url>
+    <level>6</level>
+    <alert_format>json</alert_format>
+  </integration>
+</ossec_config>
