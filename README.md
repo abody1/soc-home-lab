@@ -69,7 +69,8 @@ This is why the Shuffle e-mail always ends with a reminder to read the request i
 
 The Wazuh web rules read the **access log**, which contains the URL but not the request body.
 A SQL injection sent in a `POST` body (for example the Juice Shop login form) produces no SQL injection alert at all.
-Possible mitigations: a WAF or ModSecurity in front of the app, application-level logging, or network-based detection (Suricata/Zeek in Security Onion).
+
+Logging full request bodies is **not** the answer – it would put passwords and tokens into the logs. The recommended fix (thanks to feedback on LinkedIn) is an **application-side authentication event** with only the decision, the account and a correlation ID that links it to the proxy log, never secrets – and an end-to-end test that it reaches the analyst. Details in [`docs/findings.md`](docs/findings.md#recommended-fix-an-application-side-authentication-event).
 
 ### 3. Network vs. host visibility
 
