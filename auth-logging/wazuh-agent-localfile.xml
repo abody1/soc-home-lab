@@ -1,0 +1,17 @@
+<!-- Wazuh agent (nginx-proxy): read the Nginx logs and the JSON auth events -->
+<ossec_config>
+  <localfile>
+    <log_format>apache</log_format>
+    <location>/var/log/nginx/access.log</location>
+  </localfile>
+
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/nginx/error.log</location>
+  </localfile>
+
+  <localfile>
+    <log_format>json</log_format>
+    <location>/var/log/authlog/auth-events.json</location>
+  </localfile>
+</ossec_config>

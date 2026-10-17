@@ -1,0 +1,55 @@
+<!-- Rules for application-side login events written by auth_logger.py -->
+<group name="local,authentication,auth_event,">
+
+  <rule id="100200" level="0">
+    <decoded_as>json</decoded_as>
+    <field name="auth_event">^login$</field>
+    <description>Application login event</description>
+  </rule>
+
+  <rule id="100201" level="3">
+    <if_sid>100200</if_sid>
+    <field name="decision">^failure$</field>
+    <description>Login failed for account $(account) from $(src_ip)</description>
+    <group>authentication_failed,</group>
+  </rule>
+
+  <rule id="100202" level="3">
+    <if_sid>100200</if_sid>
+    <field name="decision">^success$</field>
+    <description>Login succeeded for account $(account) from $(src_ip)</description>
+    <group>authentication_success,</group>
+  </rule>
+
+  <rule id="100203" level="8">
+    <if_sid>100201</if_sid>
+    <field name="account" type="pcre2">(?i)('|--|/\*|\bor\b\s+\S+\s*=|\bunion\b\s+\bselect\b)</field>
+    <description>SQL injection pattern in login form (login failed) - account: $(account)</description>
+    <mitre>
+      <id>T1190</id>
+    </mitre>
+    <group>attack,sql_injection,</group>
+  </rule>
+
+  <rule id="100204" level="12">
+    <if_sid>100202</if_sid>
+    <field name="account" type="pcre2">(?i)('|--|/\*|\bor\b\s+\S+\s*=|\bunion\b\s+\bselect\b)</field>
+    <description>Possible authentication bypass: login SUCCEEDED with SQL injection pattern - account: $(account)</description>
+    <mitre>
+      <id>T1190</id>
+      <id>T1078</id>
+    </mitre>
+    <group>attack,sql_injection,authentication_bypass,</group>
+  </rule>
+
+  <rule id="100205" level="10" frequency="5" timeframe="120">
+    <if_matched_sid>100201</if_matched_sid>
+    <same_field>account</same_field>
+    <description>Possible brute force: 5 failed logins for account $(account) within 2 minutes</description>
+    <mitre>
+      <id>T1110</id>
+    </mitre>
+    <group>authentication_failures,</group>
+  </rule>
+
+</group>

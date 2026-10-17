@@ -2,6 +2,9 @@
 
 A hands-on SOC lab I built during my studies as an **IT Security Analyst (SOC)** student at KYH Malmö.
 It detects web attacks against a vulnerable web application, **enriches every alert automatically**, and sends the analyst a short, readable summary by e-mail.
+It also closes a detection gap I found: a **login bypass via SQL injection** that the standard web rules could not see now raises a **level 12 alert** in Wazuh.
+
+> The lab environment (Wazuh, Juice Shop behind an Nginx proxy, and the attack-chain script) started from the KYH *Logghantering* course template. The Shuffle enrichment workflow, the findings, the auth-event logger and the custom detection rules are my own work.
 
 > **Author:** Abdalrahman (Rio) Al-Dulaimi · Malmö, Sweden · [LinkedIn](https://linkedin.com/in/abdalrahman-al-dulaimi-563893362)
 > Looking for an LIA / internship in SOC or detection & response from **7 Dec 2026 – 23 Apr 2027**.
@@ -70,7 +73,20 @@ This is why the Shuffle e-mail always ends with a reminder to read the request i
 The Wazuh web rules read the **access log**, which contains the URL but not the request body.
 A SQL injection sent in a `POST` body (for example the Juice Shop login form) produces no SQL injection alert at all.
 
-Logging full request bodies is **not** the answer – it would put passwords and tokens into the logs. The recommended fix (thanks to feedback on LinkedIn) is an **application-side authentication event** with only the decision, the account and a correlation ID that links it to the proxy log, never secrets – and an end-to-end test that it reaches the analyst. Details in [`docs/findings.md`](docs/findings.md#recommended-fix-an-application-side-authentication-event).
+Logging full request bodies is **not** the answer – it would put passwords and tokens into the logs. Following feedback on LinkedIn, I implemented an **application-side authentication event**: a small proxy in front of the login endpoint writes the decision, the account and a correlation ID that links it to the Nginx log line – never the password. See [`auth-logging/`](auth-logging/).
+
+**Tested end to end (17 Oct 2026):**
+
+| Test | Result |
+|---|---|
+| Course attack chain – login bypass via SQL injection in the e-mail field (the script expected *"probably no alert"*) | Wazuh **rule 100204, level 12 – "Possible authentication bypass"** ✅ |
+| 5 failed logins on one account | **Rule 100205, level 10 – brute force** ✅ |
+| Correlation ID | Same ID in the auth event and the Nginx access log line ✅ |
+| Secrets | No password or token in any log ✅ |
+
+![Wazuh alert for rule 100204](screenshots/wazuh-100204-auth-bypass-alert.png)
+
+While building it I hit a **rule collision**: Wazuh's built-in Suricata rule 86600 grabbed my JSON events because they had an `event_type` field. `wazuh-logtest` showed the problem, and renaming the field fixed it. Details in [`docs/findings.md`](docs/findings.md).
 
 ### 3. Network vs. host visibility
 
@@ -86,21 +102,24 @@ Full write-up: [`docs/findings.md`](docs/findings.md)
 | Exploit Public-Facing Application | [T1190](https://attack.mitre.org/techniques/T1190/) | SQL injection against `/rest/products/search` |
 | File and Directory Discovery | [T1083](https://attack.mitre.org/techniques/T1083/) | Path traversal attempts for `/etc/passwd` |
 | Data from Information Repositories | [T1213](https://attack.mitre.org/techniques/T1213/) | Dumping table names from `sqlite_master` |
+| Valid Accounts | [T1078](https://attack.mitre.org/techniques/T1078/) | Logging in as admin via SQL injection in the login form |
+| Brute Force | [T1110](https://attack.mitre.org/techniques/T1110/) | Repeated failed logins on one account |
 
 ## Repository layout
 
 | Path | Content |
 |---|---|
-| [`lab/`](lab/) | Docker Compose for Juice Shop + Nginx, Nginx config, Wazuh agent log config |
-| [`wazuh/`](wazuh/) | Integration config for the Shuffle webhook and a proposed custom rule |
+| [`auth-logging/`](auth-logging/) | Auth-event logger (Python), Nginx config with correlation ID, test results |
+| [`lab/`](lab/) | Simplified standalone Docker Compose for Juice Shop + Nginx (for reproducing without the course template) |
+| [`wazuh/`](wazuh/) | Auth-event detection rules, Shuffle webhook integration and a proposed escalation rule |
 | [`shuffle/`](shuffle/) | Workflow description and the Python enrichment/formatting step |
 | [`docs/`](docs/) | Setup guide, findings and lessons learned |
 | [`samples/`](samples/) | Sanitised alert e-mails produced by the lab |
-| [`screenshots/`](screenshots/) | Screenshots of Wazuh, Shuffle and the e-mails |
+| [`screenshots/`](screenshots/) | Wazuh alert for the login bypass and the attack-chain run |
 
 ## Skills shown
 
-SIEM (Wazuh) · SOAR (Shuffle) · alert triage and enrichment · web attack detection · Docker · Nginx · Python · Security Onion · MITRE ATT&CK · detection gap analysis
+SIEM (Wazuh) · custom detection rules · SOAR (Shuffle) · alert triage and enrichment · web attack detection · secure logging design · log correlation · Docker · Nginx · Python · Security Onion · MITRE ATT&CK · detection gap analysis
 
 ## Disclaimer
 
